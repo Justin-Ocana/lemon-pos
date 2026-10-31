@@ -1,8 +1,23 @@
-# Lemon POS
+<p align="center">
+  <img src="docs/img/banner.svg" alt="Lemon POS" width="100%">
+</p>
+
+<p align="center">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white">
+  <img alt="Django" src="https://img.shields.io/badge/Django-4.2-092E20?logo=django&logoColor=white">
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-336791?logo=postgresql&logoColor=white">
+  <img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?logo=tailwindcss&logoColor=white">
+  <img alt="Licencia" src="https://img.shields.io/badge/licencia-uso_no_comercial-orange">
+  <img alt="Estado" src="https://img.shields.io/badge/estado-en_desarrollo-yellow">
+</p>
 
 Sistema de punto de venta web para pequeños y medianos negocios en Ecuador. Lo empecé porque los POS que hay en el mercado son caros, están en inglés y no resuelven cosas que aquí son del día a día: facturar al SRI, el IVA del 15% y el "fiado".
 
-Es un proyecto en desarrollo. Funciona, pero todavía no está terminado y no ha pasado por una prueba con negocios reales.
+Funciona, pero todavía no está terminado y no ha pasado por una prueba con negocios reales.
+
+<p align="center">
+  <img src="docs/img/landing.png" alt="Página de inicio de Lemon POS" width="900">
+</p>
 
 ## Qué hace
 
@@ -16,6 +31,22 @@ Es un proyecto en desarrollo. Funciona, pero todavía no está terminado y no ha
 - **Facturación electrónica SRI**: generación del XML y clave de acceso de 49 dígitos.
 
 Está pensado para usarse desde celular, tablet o computador.
+
+## Cómo se ve
+
+Las capturas usan datos de demostración, no ventas reales.
+
+**Dashboard**: ventas del día, tendencia de la semana, productos más vendidos y métodos de pago.
+
+<p align="center">
+  <img src="docs/img/dashboard.png" alt="Dashboard con ventas del día y gráficos" width="900">
+</p>
+
+**Historial de ventas**: búsqueda, filtros y descarga de cada comprobante.
+
+<p align="center">
+  <img src="docs/img/ventas-historial.png" alt="Historial de ventas" width="900">
+</p>
 
 ## Estado
 
@@ -32,12 +63,12 @@ Está pensado para usarse desde celular, tablet o computador.
 - PostgreSQL
 - Django Channels + Redis (actualizaciones en tiempo real)
 - TailwindCSS
-- Cloudinary para las imágenes
+- Cloudinary para las imágenes de productos
 - Despliegue en Render (hay `Dockerfile` y `render.yaml`)
 
 ## Cómo correrlo en local
 
-Necesitas Python, PostgreSQL y Redis.
+Necesitas Python 3.11, PostgreSQL y una cuenta de Cloudinary (para las imágenes de productos).
 
 ```bash
 python -m venv venv
@@ -64,6 +95,7 @@ apps/
   transacciones/        movimientos y caja
   usuarios/             usuarios y permisos
   ventas/               ventas y órdenes
+docs/                   notas de diseño y arquitectura
 ```
 
 ## Licencia
@@ -76,4 +108,4 @@ Los detalles están en [LICENSE](LICENSE).
 
 ## Contacto
 
-Justin Ocaña - justin.ocana.molina@gmail.com - https://justin-ocana.github.io/
+Justin Ocaña · [justin.ocana.molina@gmail.com](mailto:justin.ocana.molina@gmail.com) · [justin-ocana.github.io](https://justin-ocana.github.io/)
