@@ -220,7 +220,10 @@ class Cliente(models.Model):
         # Crear movimiento con información de ventas afectadas
         notas_completas = notas or "Pago de crédito"
         if ventas_afectadas:
-            notas_completas += f"\nVentas afectadas: {', '.join([f'#{v['numero_factura'] or v['venta_id']}' for v in ventas_afectadas])}"
+            etiquetas = ', '.join(
+                '#{}'.format(v['numero_factura'] or v['venta_id']) for v in ventas_afectadas
+            )
+            notas_completas += f"\nVentas afectadas: {etiquetas}"
         
         movimiento = CreditoMovimiento.objects.create(
             cliente=self,
