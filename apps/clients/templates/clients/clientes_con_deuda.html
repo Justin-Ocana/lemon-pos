@@ -1,0 +1,358 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ section_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Métricas Cards */
+    .metric-card {
+        background: white;
+        border-radius: 20px;
+        padding: 28px 24px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 120px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .metric-card:hover {
+        box-shadow: 0 8px 24px rgba(34, 197, 94, 0.12);
+        transform: translateY(-4px);
+        border-color: rgba(34, 197, 94, 0.2);
+    }
+    
+    .metric-icon {
+        width: 68px;
+        height: 68px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        flex-shrink: 0;
+    }
+    
+    .metric-content {
+        flex: 1;
+    }
+    
+    .metric-value {
+        font-size: 36px;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 8px;
+        color: #111827;
+        letter-spacing: -0.02em;
+    }
+    
+    .metric-label {
+        font-size: 13px;
+        color: #6b7280;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    
+    /* Avatar */
+    .client-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    /* Badge de porcentaje */
+    .percent-badge {
+        padding: 8px 14px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .percent-badge::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    
+    .percent-high {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .percent-high::before {
+        background: #ef4444;
+    }
+    
+    .percent-medium {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .percent-medium::before {
+        background: #f59e0b;
+    }
+    
+    .percent-low {
+        background: #fef9c3;
+        color: #854d0e;
+    }
+    
+    .percent-low::before {
+        background: #eab308;
+    }
+    
+    /* Action Buttons */
+    .action-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        cursor: pointer;
+        font-size: 15px;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .action-btn-history {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+    
+    .action-btn-history:hover {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    .action-btn-pay {
+        background: #dcfce7;
+        color: #166534;
+    }
+    
+    .action-btn-pay:hover {
+        background: #22c55e;
+        color: white;
+    }
+    
+    .action-btn-view {
+        background: #f3f4f6;
+        color: #4b5563;
+    }
+    
+    .action-btn-view:hover {
+        background: #6b7280;
+        color: white;
+    }
+    
+    /* Search */
+    .search-wrapper {
+        position: relative;
+        width: 100%;
+    }
+    
+    .search-input {
+        height: 52px;
+        border-radius: 14px;
+        padding-left: 52px;
+        padding-right: 20px;
+        border: 2px solid #e5e7eb;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 15px;
+        width: 100%;
+        background: white;
+        color: #374151;
+        font-weight: 500;
+    }
+    
+    .search-input:focus {
+        border-color: #22c55e;
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+        outline: none;
+    }
+    
+    .search-icon {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        font-size: 20px;
+        pointer-events: none;
+    }
+    
+    .search-input:focus ~ .search-icon {
+        color: #22c55e;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+                <i class="fas fa-file-invoice-dollar text-emerald-500"></i>
+                {{ section_title }}
+            </h1>
+            <p class="text-gray-600 text-lg">Gestión de cuentas por cobrar</p>
+        </div>
+        <a href="{% url 'clients:lista' %}" 
+           class="bg-white border-2 border-gray-200 hover:border-gray-300 text-gray-700 font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center gap-3 hover:shadow-md">
+            <i class="fas fa-arrow-left"></i>
+            <span>Volver a Clientes</span>
+        </a>
+    </div>
+
+    <!-- Resumen General -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <!-- Total Deuda -->
+        <div class="metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #991b1b;">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="metric-content">
+                <div class="metric-value" style="color: #991b1b;">${{ total_deuda|floatformat:2 }}</div>
+                <div class="metric-label">Total Deuda</div>
+            </div>
+        </div>
+        
+        <!-- Clientes con Deuda -->
+        <div class="metric-card">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e;">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="metric-content">
+                <div class="metric-value" style="color: #92400e;">{{ total_clientes_deuda }}</div>
+                <div class="metric-label">Clientes con Deuda</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Búsqueda -->
+    <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100">
+        <form method="GET">
+            <div class="search-wrapper">
+                <input type="text" name="q" value="{{ query }}" 
+                       placeholder="Buscar cliente por nombre o identificación..." 
+                       class="search-input">
+                <i class="fas fa-search search-icon"></i>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabla de Clientes -->
+    <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Cliente</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Identificación</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Límite Crédito</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Saldo Deuda</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Disponible</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">% Usado</th>
+                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for cliente in clientes %}
+                    <tr class="hover:bg-gray-50 transition-colors duration-150">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="client-avatar" style="background: {% cycle '#dbeafe' '#dcfce7' '#fef3c7' '#e9d5ff' %}; color: {% cycle '#1e40af' '#166534' '#92400e' '#6b21a8' %};">
+                                    {{ cliente.get_iniciales }}
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">{{ cliente.nombre }}</div>
+                                    <div class="text-sm text-gray-500">{{ cliente.telefono|default:"-" }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {{ cliente.identificacion }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-600">
+                            ${{ cliente.limite_credito|floatformat:2 }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">
+                            ${{ cliente.saldo_credito_actual|floatformat:2 }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-emerald-600">
+                            ${{ cliente.get_credito_disponible|floatformat:2 }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if cliente.limite_credito > 0 %}
+                                {% widthratio cliente.saldo_credito_actual 100 cliente.limite_credito as porcentaje %}
+                                {% if porcentaje >= 90 %}
+                                    <span class="percent-badge percent-high">{{ porcentaje }}%</span>
+                                {% elif porcentaje >= 70 %}
+                                    <span class="percent-badge percent-medium">{{ porcentaje }}%</span>
+                                {% else %}
+                                    <span class="percent-badge percent-low">{{ porcentaje }}%</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="percent-badge percent-low">0%</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex justify-center gap-2">
+                                <a href="{% url 'clients:historial_credito' cliente.id %}" 
+                                   class="action-btn action-btn-history" 
+                                   title="Ver Historial">
+                                    <i class="fas fa-history"></i>
+                                </a>
+                                <a href="{% url 'clients:registrar_pago' cliente.id %}" 
+                                   class="action-btn action-btn-pay" 
+                                   title="Registrar Pago">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </a>
+                                <a href="{% url 'clients:detalle' cliente.id %}" 
+                                   class="action-btn action-btn-view" 
+                                   title="Ver Detalle">
+                                    <i class="far fa-eye"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center">
+                            <div class="flex flex-col items-center gap-3">
+                                <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-check-circle text-emerald-500 text-3xl"></i>
+                                </div>
+                                <p class="text-lg font-semibold text-gray-700">¡No hay clientes con deuda!</p>
+                                <p class="text-sm text-gray-500">Todas las cuentas están al día</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

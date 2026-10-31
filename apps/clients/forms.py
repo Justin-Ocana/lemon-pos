@@ -1,0 +1,135 @@
+from django import forms
+from .models import Cliente
+
+# Formulario para crear o editar un cliente
+class ClienteForm(forms.ModelForm):
+    class Meta:
+        model = Cliente
+        fields = ['codigo', 'nombre', 'razon_social', 'identificacion', 'email', 
+                  'telefono', 'direccion', 'ciudad', 'grupo', 'credito', 'estado',
+                  'cupo', 'tasa_descuento', 'tasa_recargo', 'comentarios',
+                  'credito_habilitado', 'limite_credito', 'dias_credito']
+        widgets = {
+            # Campo Código
+            'codigo': forms.TextInput(attrs={
+                'class': 'w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all',
+                'placeholder': 'Ingrese el código...'
+            }),
+            # Campo Nombre
+            'nombre': forms.TextInput(attrs={
+                'class': 'w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all',
+                'placeholder': 'Ingrese el nombre...'
+            }),
+            # Campo Razón Social
+            'razon_social': forms.TextInput(attrs={
+                'class': 'w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all',
+                'placeholder': 'Ingrese la razón social...'
+            }),
+            # Campo Identificación
+            'identificacion': forms.TextInput(attrs={
+                'class': 'w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all',
+                'placeholder': 'Ingrese la cédula o RUC...'
+            }),
+            # Campo Email
+            'email': forms.EmailInput(attrs={
+                'class': 'w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all',
+                'placeholder': 'Ingrese el email...'
+            }),
+            # Campo Teléfono
+            'telefono': forms.TextInput(attrs={
+                'class': 'w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all',
+                'placeholder': 'Ingrese el teléfono...'
+            }),
+            # Campo Dirección
+            'direccion': forms.TextInput(attrs={
+                'class': 'w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all',
+                'placeholder': 'Ingrese la dirección...'
+            }),
+            # Campo Ciudad
+            'ciudad': forms.TextInput(attrs={
+                'class': 'w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all',
+                'placeholder': 'Ingrese la ciudad...'
+            }),
+            # Campo Grupo
+            'grupo': forms.Select(attrs={
+                'class': 'w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all',
+            }),
+            # Campo Crédito
+            'credito': forms.Select(attrs={
+                'class': 'w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all',
+            }),
+            # Campo Estado
+            'estado': forms.Select(attrs={
+                'class': 'w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all',
+            }),
+            # Campo Cupo
+            'cupo': forms.NumberInput(attrs={
+                'class': 'w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all',
+                'placeholder': 'Ingrese el cupo...',
+                'step': '0.01'
+            }),
+            # Campo Tasa de Descuento
+            'tasa_descuento': forms.NumberInput(attrs={
+                'class': 'w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all',
+                'placeholder': 'Ingrese la tasa de descuento...',
+                'step': '0.01'
+            }),
+            # Campo Tasa de Recargo
+            'tasa_recargo': forms.NumberInput(attrs={
+                'class': 'w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all',
+                'placeholder': 'Ingrese la tasa de recargo...',
+                'step': '0.01'
+            }),
+            # Campo Comentarios
+            'comentarios': forms.Textarea(attrs={
+                'class': 'w-full border border-gray-300 rounded-lg p-3 min-h-[120px] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all',
+                'placeholder': 'Ingrese comentarios adicionales sobre el cliente...'
+            }),
+            # === CAMPOS DE CRÉDITO ===
+            # Crédito Habilitado
+            'credito_habilitado': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500',
+            }),
+            # Límite de Crédito
+            'limite_credito': forms.NumberInput(attrs={
+                'class': 'w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all',
+                'placeholder': 'Ingrese el límite de crédito...',
+                'step': '0.01'
+            }),
+            # Días de Crédito
+            'dias_credito': forms.NumberInput(attrs={
+                'class': 'w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all',
+                'placeholder': 'Días de plazo (ej: 30)',
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # 🎯 Hacer campos opcionales con valores por defecto
+        self.fields['grupo'].required = False
+        self.fields['grupo'].initial = 'regular'
+        
+        self.fields['estado'].required = False
+        self.fields['estado'].initial = 'activo'
+        
+        self.fields['credito'].required = False
+        self.fields['credito'].initial = 0
+        
+        self.fields['cupo'].required = False
+        self.fields['cupo'].initial = 0
+        
+        self.fields['tasa_descuento'].required = False
+        self.fields['tasa_descuento'].initial = 0
+        
+        self.fields['tasa_recargo'].required = False
+        self.fields['tasa_recargo'].initial = 0
+        
+        # Campos de crédito
+        self.fields['credito_habilitado'].required = False
+        self.fields['credito_habilitado'].initial = False
+        
+        self.fields['limite_credito'].required = False
+        self.fields['limite_credito'].initial = 0
+        
+        self.fields['dias_credito'].required = False
+        self.fields['dias_credito'].initial = 0

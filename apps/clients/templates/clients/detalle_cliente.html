@@ -1,0 +1,370 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    Detalle de Cliente - {{ cliente.nombre }}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/clientes.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header del perfil con gradiente -->
+    <div class="client-profile-header">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-6">
+                <div class="client-profile-avatar">
+                    {{ cliente.get_iniciales }}
+                </div>
+                <div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <h1 class="text-3xl font-bold">{{ cliente.nombre }}</h1>
+                        {% if cliente.es_favorito %}
+                        <i class="fas fa-star" style="color: #fbbf24; font-size: 24px;"></i>
+                        {% endif %}
+                    </div>
+                    <p class="text-emerald-100 text-lg">{{ cliente.identificacion }}</p>
+                    <div class="flex items-center gap-4 mt-3">
+                        {% if cliente.telefono %}
+                        <span class="flex items-center gap-2">
+                            <i class="fas fa-phone"></i>
+                            {{ cliente.telefono }}
+                        </span>
+                        {% endif %}
+                        {% if cliente.email %}
+                        <span class="flex items-center gap-2">
+                            <i class="fas fa-envelope"></i>
+                            {{ cliente.email }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <a href="{% url 'clients:editar' cliente.id %}" 
+                   class="bg-white text-emerald-600 hover:bg-emerald-50 font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center shadow-sm hover:shadow-md">
+                    <i class="fas fa-edit mr-2"></i>Editar
+                </a>
+                <a href="{% url 'clients:lista' %}" 
+                   class="bg-gradient-to-br from-emerald-600 to-lime-600 hover:from-emerald-700 hover:to-lime-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center shadow-lg hover:shadow-xl">
+                    <i class="fas fa-arrow-left mr-2"></i>Volver
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas rápidas -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="client-stat-card">
+            <div class="client-stat-value" style="color: #10b981;">
+                ${{ cliente.total_gastado|floatformat:2 }}
+            </div>
+            <div class="client-stat-label">Total Gastado</div>
+        </div>
+        
+        <div class="client-stat-card">
+            <div class="client-stat-value" style="color: #3b82f6;">
+                {{ cliente.total_compras }}
+            </div>
+            <div class="client-stat-label">Compras Realizadas</div>
+        </div>
+        
+        <div class="client-stat-card">
+            <div class="client-stat-value" style="color: #f59e0b;">
+                ${{ cliente.cupo|floatformat:2 }}
+            </div>
+            <div class="client-stat-label">Cupo de Crédito</div>
+        </div>
+        
+        <div class="client-stat-card">
+            <div class="client-stat-value" style="color: #8b5cf6;">
+                {% if cliente.ultima_compra %}
+                {{ cliente.ultima_compra|date:"d M" }}
+                {% else %}
+                -
+                {% endif %}
+            </div>
+            <div class="client-stat-label">Última Compra</div>
+        </div>
+    </div>
+
+    <!-- Información del cliente en tabs/secciones -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <!-- Columna izquierda - Información principal -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Información básica -->
+            <div class="client-info-card">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-user text-emerald-500"></i>
+                    Información Básica
+                </h2>
+                <div class="space-y-1">
+                    <div class="client-info-row">
+                        <span class="client-info-label">Código:</span>
+                        <span class="client-info-value">{{ cliente.codigo|default:"-" }}</span>
+                    </div>
+                    <div class="client-info-row">
+                        <span class="client-info-label">Nombre:</span>
+                        <span class="client-info-value font-semibold">{{ cliente.nombre }}</span>
+                    </div>
+                    <div class="client-info-row">
+                        <span class="client-info-label">Razón Social:</span>
+                        <span class="client-info-value">{{ cliente.razon_social|default:"-" }}</span>
+                    </div>
+                    <div class="client-info-row">
+                        <span class="client-info-label">Identificación:</span>
+                        <span class="client-info-value">{{ cliente.identificacion }}</span>
+                    </div>
+                    <div class="client-info-row">
+                        <span class="client-info-label">Email:</span>
+                        <span class="client-info-value">{{ cliente.email|default:"-" }}</span>
+                    </div>
+                    <div class="client-info-row">
+                        <span class="client-info-label">Teléfono:</span>
+                        <span class="client-info-value">{{ cliente.telefono|default:"-" }}</span>
+                    </div>
+                    <div class="client-info-row">
+                        <span class="client-info-label">Dirección:</span>
+                        <span class="client-info-value">{{ cliente.direccion|default:"-" }}</span>
+                    </div>
+                    <div class="client-info-row">
+                        <span class="client-info-label">Ciudad:</span>
+                        <span class="client-info-value">{{ cliente.ciudad|default:"-" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Historial de compras -->
+            <div class="client-info-card">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-receipt text-emerald-500"></i>
+                    Historial de Compras
+                </h2>
+                {% if ventas %}
+                <div class="space-y-0">
+                    {% for venta in ventas %}
+                    <div class="purchase-history-item">
+                        <div class="purchase-date">
+                            <i class="fas fa-calendar-alt text-gray-400 mr-2"></i>
+                            {{ venta.fecha_hora|date:"d/m/Y H:i" }}
+                        </div>
+                        <div class="purchase-invoice">
+                            <i class="fas fa-file-invoice text-gray-400 mr-2"></i>
+                            Factura #{{ venta.secuencial|default:venta.id }}
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="purchase-total">
+                                ${{ venta.total|floatformat:2 }}
+                            </div>
+                            <a href="{% url 'ventas:venta_completa' venta.id %}" 
+                               class="action-btn action-btn-view" 
+                               title="Ver detalle">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-shopping-cart text-gray-400 text-2xl"></i>
+                    </div>
+                    <p class="text-gray-500">No hay compras registradas</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Columna derecha - Información comercial -->
+        <div class="space-y-6">
+            <!-- Configuración comercial -->
+            <div class="client-info-card">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-cog text-emerald-500"></i>
+                    Configuración
+                </h2>
+                <div class="space-y-1">
+                    <div class="client-info-row">
+                        <span class="client-info-label">Grupo:</span>
+                        <span class="client-info-value">
+                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-lg 
+                                {% if cliente.grupo == 'vip' %}bg-purple-100 text-purple-800
+                                {% elif cliente.grupo == 'corporativo' %}bg-blue-100 text-blue-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ cliente.get_grupo_display }}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="client-info-row">
+                        <span class="client-info-label">Estado:</span>
+                        <span class="client-info-value">
+                            <span class="status-badge status-{{ cliente.estado }}">
+                                {{ cliente.get_estado_display }}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="client-info-row">
+                        <span class="client-info-label">Crédito:</span>
+                        <span class="client-info-value">{{ cliente.get_credito_display }}</span>
+                    </div>
+                    <div class="client-info-row">
+                        <span class="client-info-label">Cupo:</span>
+                        <span class="client-info-value font-semibold text-emerald-600">
+                            ${{ cliente.cupo|floatformat:2 }}
+                        </span>
+                    </div>
+                    <div class="client-info-row">
+                        <span class="client-info-label">Descuento:</span>
+                        <span class="client-info-value">{{ cliente.tasa_descuento }}%</span>
+                    </div>
+                    <div class="client-info-row">
+                        <span class="client-info-label">Recargo:</span>
+                        <span class="client-info-value">{{ cliente.tasa_recargo }}%</span>
+                    </div>
+                    <div class="client-info-row">
+                        <span class="client-info-label">Fecha Registro:</span>
+                        <span class="client-info-value">{{ cliente.fecha_registro|date:"d/m/Y" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- === SECCIÓN DE CRÉDITO === -->
+            {% if cliente.credito_habilitado %}
+            <div class="client-info-card border-l-4 border-blue-500">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-credit-card text-blue-500"></i>
+                    Estado de Crédito
+                </h2>
+                <div class="space-y-4">
+                    <!-- Límite y Saldo -->
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-blue-600 font-medium">Límite de Crédito</span>
+                            <span class="text-lg font-bold text-blue-700">${{ cliente.limite_credito|floatformat:2 }}</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-red-600 font-medium">Saldo Actual</span>
+                            <span class="text-lg font-bold text-red-700">${{ cliente.saldo_credito_actual|floatformat:2 }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-green-600 font-medium">Disponible</span>
+                            <span class="text-lg font-bold text-green-700">${{ cliente.get_credito_disponible|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Barra de progreso -->
+                    <div>
+                        {% if cliente.limite_credito > 0 %}
+                            {% widthratio cliente.saldo_credito_actual cliente.limite_credito 100 as porcentaje_entero %}
+                            <div class="flex justify-between text-xs mb-2">
+                                <span class="text-gray-600">Usado: <span class="font-semibold text-red-600">${{ cliente.saldo_credito_actual|floatformat:2 }}</span></span>
+                                <span class="text-gray-600">Disponible: <span class="font-semibold text-green-600">${{ cliente.get_credito_disponible|floatformat:2 }}</span></span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="h-2.5 rounded-full {% if porcentaje_entero >= 90 %}bg-red-600{% elif porcentaje_entero >= 70 %}bg-orange-500{% else %}bg-green-500{% endif %}" 
+                                     style="width: {{ porcentaje_entero }}%"></div>
+                            </div>
+                        {% else %}
+                            <div class="flex justify-between text-xs text-gray-600 mb-1">
+                                <span>Uso del crédito</span>
+                                <span>0%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="h-2.5 rounded-full bg-green-500" style="width: 0%"></div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Días de crédito -->
+                    {% if cliente.dias_credito > 0 %}
+                    <div class="text-sm text-gray-600">
+                        <i class="fas fa-calendar-alt mr-1"></i>
+                        Plazo: {{ cliente.dias_credito }} días
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Botones de acción -->
+                    <div class="space-y-2 pt-2">
+                        <a href="{% url 'clients:historial_credito' cliente.id %}" 
+                           class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center">
+                            <i class="fas fa-history mr-2"></i>
+                            Ver Historial
+                        </a>
+                        {% if cliente.saldo_credito_actual > 0 %}
+                        <a href="{% url 'clients:registrar_pago' cliente.id %}" 
+                           class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center">
+                            <i class="fas fa-money-bill-wave mr-2"></i>
+                            Registrar Pago
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% elif not cliente.es_consumidor_final %}
+            <!-- Mostrar opción para habilitar crédito -->
+            <div class="client-info-card border-l-4 border-gray-300">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-credit-card text-gray-400"></i>
+                    Crédito
+                </h2>
+                <div class="text-center py-4">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-ban text-gray-400 text-2xl"></i>
+                    </div>
+                    <p class="text-gray-500 mb-3">Crédito no habilitado</p>
+                    <a href="{% url 'clients:editar' cliente.id %}" 
+                       class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                        Habilitar Crédito
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Notas -->
+            {% if cliente.comentarios %}
+            <div class="client-info-card">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-sticky-note text-emerald-500"></i>
+                    Notas
+                </h2>
+                <div class="text-gray-700 whitespace-pre-line text-sm leading-relaxed">
+                    {{ cliente.comentarios }}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Acciones rápidas -->
+            <div class="client-info-card">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fas fa-bolt text-emerald-500"></i>
+                    Acciones Rápidas
+                </h2>
+                <div class="space-y-3">
+                    <a href="{% url 'ventas:ventas' %}?cliente={{ cliente.id }}" 
+                       class="w-full bg-gradient-to-br from-emerald-500 to-lime-500 hover:from-emerald-600 hover:to-lime-600 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                        <i class="fas fa-shopping-cart mr-2"></i>
+                        Nueva Venta
+                    </a>
+                    <button onclick="toggleFavorito({{ cliente.id }}, this)" 
+                            class="w-full {% if cliente.es_favorito %}bg-gradient-to-br from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600{% else %}bg-gray-200 hover:bg-gray-300 text-gray-700{% endif %} text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center shadow-sm hover:shadow-md">
+                        <i class="fas fa-star mr-2"></i>
+                        {% if cliente.es_favorito %}Quitar de Favoritos{% else %}Marcar como Favorito{% endif %}
+                    </button>
+                    <a href="{% url 'clients:editar' cliente.id %}" 
+                       class="w-full bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                        <i class="fas fa-edit mr-2"></i>
+                        Editar Cliente
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/clientes.js' %}"></script>
+{% endblock %}

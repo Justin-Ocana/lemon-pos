@@ -1,0 +1,602 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Completar Venta{% endblock %}
+{% block section_title %}Completar Venta{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/completar-venta.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4 max-w-7xl">
+    <!-- Layout de 2 columnas en desktop, 1 en mobile -->
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+        <!-- Columna Izquierda: Resumen (40%) -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100 sticky top-4">
+                <h2 class="text-xl font-bold mb-3 text-gray-800 border-b pb-2 flex items-center justify-between">
+                    <div class="flex items-center">
+                        <i data-lucide="shopping-cart" class="w-5 h-5 mr-2 text-emerald-600"></i>
+                        Resumen
+                    </div>
+                    <span class="text-sm font-semibold text-gray-600">Items: {{ cart_items|length }}</span>
+                </h2>
+
+                <!-- Cart Items - MÁS COMPACTO -->
+                <div class="mb-4">
+                    <div class="bg-gray-50 rounded-lg p-2 border border-gray-100 max-h-48 overflow-y-auto">
+                        {% if cart_items %}
+                        <div class="divide-y divide-gray-200">
+                            {% for item in cart_items %}
+                            <div
+                                class="py-2 flex justify-between items-center hover:bg-gray-100 px-2 rounded transition-all">
+                                <div class="flex-1">
+                                    <div class="font-semibold text-gray-800 text-sm">{{ item.nombre }}</div>
+                                    <div class="text-xs text-gray-500">x{{ item.quantity }}</div>
+                                </div>
+                                <div class="font-bold text-emerald-600">${{ item.subtotal|floatformat:2 }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="flex flex-col items-center justify-center py-6 text-center">
+                            <i data-lucide="shopping-cart" class="w-10 h-10 text-gray-300 mb-2"></i>
+                            <p class="text-gray-500 text-xs">No hay productos</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Totales MÁS COMPACTOS -->
+                <div
+                    class="bg-gradient-to-br from-emerald-50 to-emerald-100 p-3 rounded-lg mb-3 border border-emerald-200">
+                    <div class="flex justify-between text-gray-700 mb-1 text-xs">
+                        <span>Subtotal:</span>
+                        <span class="font-semibold" id="display-subtotal">${{ subtotal|floatformat:2 }}</span>
+                    </div>
+
+                    <!-- Descuento del cliente -->
+                    <div id="descuento-row" class="flex justify-between text-emerald-600 mb-1 text-xs hidden">
+                        <span>Descuento Cliente:</span>
+                        <span class="font-semibold" id="display-descuento">-$0.00</span>
+                    </div>
+
+                    <!-- Recargo del cliente -->
+                    <div id="recargo-row" class="flex justify-between text-orange-600 mb-1 text-xs hidden">
+                        <span>Recargo Cliente:</span>
+                        <span class="font-semibold" id="display-recargo">+$0.00</span>
+                    </div>
+
+                    <div class="flex justify-between text-gray-700 mb-2 text-xs">
+                        <span>IVA ({{ request.user.business.iva_porcentaje|default:"15" }}%):</span>
+                        <span class="font-semibold" id="display-iva">${{ iva|floatformat:2 }}</span>
+                    </div>
+                    <div class="border-t border-emerald-300 pt-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700 font-bold">TOTAL</span>
+                            <span class="text-emerald-600 font-black text-3xl tracking-tight" id="display-total">${{ total|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Type - SIMPLIFICADO -->
+                <div class="mb-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-xs font-semibold text-gray-700 flex items-center">
+                            <i data-lucide="user" class="w-3 h-3 mr-1 text-emerald-600"></i>
+                            Cliente
+                        </h3>
+                        <button id="change-customer-btn"
+                            class="text-xs text-emerald-600 hover:text-emerald-700 font-medium">Cambiar</button>
+                    </div>
+                    <div id="customer-display" class="bg-gray-50 rounded-lg p-2 border border-gray-200">
+                        <div class="text-sm font-medium text-gray-800">Consumidor Final</div>
+                    </div>
+
+                    <!-- Customer Selection Modal (hidden by default) -->
+                    <div id="customer-selection-modal" class="hidden mt-2">
+                        <div class="grid grid-cols-3 gap-2 mb-2">
+                            <button
+                                class="customer-type-btn border-2 border-gray-200 rounded-lg p-2 hover:bg-emerald-50 cursor-pointer text-center transition-all active"
+                                data-type="final">
+                                <input type="radio" name="customer_type" id="final_consumer" value="final_consumer"
+                                    class="hidden" checked>
+                                <div class="text-xs font-medium">Final</div>
+                            </button>
+                            <button
+                                class="customer-type-btn border-2 border-gray-200 rounded-lg p-2 hover:bg-emerald-50 cursor-pointer text-center transition-all"
+                                data-type="registered" onclick="openClientModal()">
+                                <input type="radio" name="customer_type" id="registered_customer"
+                                    value="registered_customer" class="hidden">
+                                <div class="text-xs font-medium">Registrado</div>
+                            </button>
+                            <button
+                                class="customer-type-btn border-2 border-gray-200 rounded-lg p-2 hover:bg-emerald-50 cursor-pointer text-center transition-all"
+                                data-type="auto">
+                                <input type="radio" name="customer_type" id="auto_data_customer"
+                                    value="auto_data_customer" class="hidden">
+                                <div class="text-xs font-medium">Con datos</div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Registered Customer Information -->
+                <div id="registered-customer-section" class="mb-4 hidden">
+                    <div class="relative mb-2">
+                        <i data-lucide="search" class="absolute left-2 top-2 w-4 h-4 text-gray-400"></i>
+                        <input type="text" id="client-search" placeholder="Buscar cliente..."
+                            class="pl-8 w-full border rounded-lg py-2 text-sm">
+                    </div>
+                    <div id="client-results"
+                        class="bg-white rounded-lg border border-gray-200 shadow-md mt-2 hidden max-h-48 overflow-y-auto">
+                        <table class="w-full text-xs">
+                            <tbody id="client-results-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="selected-client-info"
+                        class="bg-emerald-50 rounded-lg p-3 border border-emerald-100 mt-2 hidden">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="text-xs flex-1">
+                                <h4 id="selected-client-name" class="font-bold text-gray-800 text-sm"></h4>
+                                <p id="selected-client-id" class="text-gray-600 mt-1"></p>
+                            </div>
+                            <button id="change-client"
+                                class="text-xs text-emerald-600 hover:text-emerald-700 font-semibold">Cambiar</button>
+                        </div>
+
+                        <!-- Información detallada del cliente -->
+                        <div id="client-details" class="mt-2 pt-2 border-t border-emerald-200 hidden">
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                    <span class="text-gray-600">Grupo:</span>
+                                    <span id="client-grupo" class="font-semibold text-gray-800"></span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Estado:</span>
+                                    <span id="client-estado" class="font-semibold text-gray-800"></span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Crédito:</span>
+                                    <span id="client-credito" class="font-semibold text-gray-800"></span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Cupo:</span>
+                                    <span id="client-cupo" class="font-semibold text-gray-800"></span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Descuento:</span>
+                                    <span id="client-descuento" class="font-semibold text-emerald-600"></span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Recargo:</span>
+                                    <span id="client-recargo" class="font-semibold text-orange-600"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <input type="hidden" id="selected-client-id-input" name="client_id">
+                    </div>
+                    <label for="invoice_required" class="flex items-center cursor-pointer mt-2 text-sm">
+                        <input type="checkbox" id="invoice_required" class="mr-2 h-4 w-4 text-emerald-600">
+                        <span>Generar factura</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna Derecha: Pago (60%) -->
+        <div class="lg:col-span-3">
+            <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100" <!-- Columna Derecha: Pago (60%) -->
+                <div class="lg:col-span-3">
+                    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+                        <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-3 flex items-center">
+                            <i data-lucide="wallet" class="w-6 h-6 mr-2 text-emerald-600"></i>
+                            Método de Pago
+                        </h2>
+
+                        <!-- Atajos de teclado compactos - Solo visible en desktop -->
+                        <div class="mb-4 p-2 bg-blue-50 border border-blue-200 rounded-lg hidden lg:block">
+                            <div class="flex items-center text-xs text-blue-800 flex-wrap gap-2">
+                                <i data-lucide="keyboard" class="w-3 h-3"></i>
+                                <span><kbd class="px-1.5 py-0.5 bg-white rounded shadow-sm border text-xs">F2</kbd>
+                                    Efectivo</span>
+                                <span><kbd class="px-1.5 py-0.5 bg-white rounded shadow-sm border text-xs">F3</kbd>
+                                    Tarjeta</span>
+                                <span><kbd class="px-1.5 py-0.5 bg-white rounded shadow-sm border text-xs">Enter</kbd>
+                                    Cobrar</span>
+                                <span><kbd class="px-1.5 py-0.5 bg-white rounded shadow-sm border text-xs">Esc</kbd>
+                                    Cancelar</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div
+                                class="border-2 rounded-lg p-3 hover:bg-emerald-50 cursor-pointer payment-method active transition-all">
+                                <input type="radio" name="metodo_pago" id="cash" value="cash" class="hidden" checked>
+                                <label for="cash" class="flex items-center cursor-pointer justify-center">
+                                    <i data-lucide="banknote" class="w-5 h-5 mr-2 text-emerald-600"></i>
+                                    <span class="font-semibold">Efectivo</span>
+                                </label>
+                            </div>
+                            <div
+                                class="border-2 rounded-lg p-3 hover:bg-emerald-50 cursor-pointer payment-method transition-all">
+                                <input type="radio" name="metodo_pago" id="card" value="card" class="hidden">
+                                <label for="card" class="flex items-center cursor-pointer justify-center">
+                                    <i data-lucide="credit-card" class="w-5 h-5 mr-2 text-gray-600"></i>
+                                    <span class="font-semibold">Tarjeta</span>
+                                </label>
+                            </div>
+                            <div
+                                class="border-2 rounded-lg p-3 hover:bg-emerald-50 cursor-pointer payment-method transition-all">
+                                <input type="radio" name="metodo_pago" id="transfer" value="transfer" class="hidden">
+                                <label for="transfer" class="flex items-center cursor-pointer justify-center">
+                                    <i data-lucide="smartphone" class="w-5 h-5 mr-2 text-gray-600"></i>
+                                    <span class="font-semibold">Transferencia</span>
+                                </label>
+                            </div>
+                            <div class="border-2 rounded-lg p-3 payment-method transition-all hover:shadow-md {% if not venta.cliente or venta.cliente.es_consumidor_final %}opacity-50 cursor-not-allowed bg-gray-50 border-gray-200{% endif %}"
+                                id="credit-payment-option">
+                                <input type="radio" name="metodo_pago" id="credit" value="credit" class="hidden" {% if not venta.cliente or venta.cliente.es_consumidor_final %}disabled{% endif %}>
+                                <label for="credit" class="flex items-center justify-center">
+                                    <i data-lucide="calendar-clock" class="w-5 h-5 mr-2 {% if not venta.cliente or venta.cliente.es_consumidor_final %}text-gray-400{% endif %}" id="credit-icon-btn"></i>
+                                    <span class="font-semibold">Crédito</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Credit Info -->
+                        <div id="credit-warning" class="hidden mb-4 p-3 rounded-lg border-l-4">
+                            <div class="flex items-start">
+                                <i data-lucide="info" class="w-5 h-5 mr-2 mt-0.5" id="credit-icon"></i>
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold" id="credit-title">Venta a Crédito</p>
+                                    <p class="text-xs mt-1" id="credit-info">{% if not venta.cliente or venta.cliente.es_consumidor_final %}Seleccione un cliente para habilitar crédito{% endif %}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cash Payment Details - COMPACTO -->
+                        <div id="cash-payment-details">
+                            <!-- Botones de Pago Rápido - MÁS COMPACTOS -->
+                            <div
+                                class="mb-4 bg-gradient-to-r from-emerald-50 to-green-50 p-3 rounded-xl border border-emerald-200">
+                                <h4
+                                    class="text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide flex items-center">
+                                    <i data-lucide="zap" class="w-3 h-3 mr-1 text-emerald-600"></i>
+                                    Pago Rápido
+                                </h4>
+                                <div class="grid grid-cols-3 lg:grid-cols-6 gap-2">
+                                    <button
+                                        class="quick-amount-btn bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3 rounded-lg shadow transform hover:scale-105 transition-all active:scale-95 text-sm"
+                                        data-value="exact">
+                                        <i data-lucide="check-circle" class="w-3 h-3 mx-auto mb-1"></i>
+                                        <div class="text-xs">EXACTO</div>
+                                    </button>
+                                    <button
+                                        class="quick-amount-btn bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded-lg shadow transform hover:scale-105 transition-all active:scale-95"
+                                        data-value="5">
+                                        <i data-lucide="banknote" class="w-3 h-3 mx-auto mb-1"></i>
+                                        <div>$5</div>
+                                    </button>
+                                    <button
+                                        class="quick-amount-btn bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded-lg shadow transform hover:scale-105 transition-all active:scale-95"
+                                        data-value="10">
+                                        <i data-lucide="banknote" class="w-3 h-3 mx-auto mb-1"></i>
+                                        <div>$10</div>
+                                    </button>
+                                    <button
+                                        class="quick-amount-btn bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded-lg shadow transform hover:scale-105 transition-all active:scale-95"
+                                        data-value="20">
+                                        <i data-lucide="banknote" class="w-3 h-3 mx-auto mb-1"></i>
+                                        <div>$20</div>
+                                    </button>
+                                    <button
+                                        class="quick-amount-btn bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded-lg shadow transform hover:scale-105 transition-all active:scale-95"
+                                        data-value="50">
+                                        <i data-lucide="wallet" class="w-3 h-3 mx-auto mb-1"></i>
+                                        <div>$50</div>
+                                    </button>
+                                    <button
+                                        class="quick-amount-btn bg-emerald-400 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded-lg shadow transform hover:scale-105 transition-all active:scale-95"
+                                        data-value="100">
+                                        <i data-lucide="wallet" class="w-3 h-3 mx-auto mb-1"></i>
+                                        <div>$100</div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div class="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                                    <label for="cash_amount"
+                                        class="block text-xs font-bold text-gray-700 mb-2 uppercase">Monto
+                                        Recibido</label>
+                                    <input type="text" id="cash_amount" name="cash_amount"
+                                        class="w-full border-2 border-gray-300 rounded-lg py-2 px-3 text-2xl font-bold text-center focus:ring-2 focus:ring-emerald-300 focus:border-emerald-500 transition-all"
+                                        placeholder="0.00">
+                                </div>
+
+                                <div
+                                    class="bg-gradient-to-br from-emerald-50 to-green-100 p-3 rounded-xl border-2 border-emerald-300">
+                                    <label for="cash_change"
+                                        class="block text-xs font-bold text-gray-700 mb-2 uppercase flex items-center">
+                                        <i data-lucide="coins" class="w-3 h-3 mr-1"></i>
+                                        Cambio
+                                    </label>
+                                    <input type="text" id="cash_change" name="cash_change"
+                                        class="w-full border-2 border-emerald-400 rounded-lg py-2 px-3 text-3xl font-black text-center text-emerald-600 bg-white"
+                                        readonly>
+                                    <div id="change-status" class="mt-2 text-center text-xs font-semibold hidden"></div>
+                                </div>
+                            </div>
+
+                            <!-- Validación Visual -->
+                            <div id="payment-validation" class="mb-3 p-3 rounded-lg hidden">
+                                <div class="flex items-center justify-center">
+                                    <i data-lucide="alert-triangle" class="w-5 h-5 mr-2"></i>
+                                    <span class="font-bold text-base" id="validation-message"></span>
+                                </div>
+                            </div>
+
+                            <!-- Teclado Numérico Compacto -->
+                            <div class="bg-gray-100 p-3 rounded-xl">
+                                <div class="grid grid-cols-3 gap-2 max-w-xs mx-auto" id="cash-numpad">
+                                    <button
+                                        class="num-pad-btn bg-white hover:bg-emerald-100 text-gray-800 font-semibold py-3 rounded-lg shadow-sm border border-gray-200 transition-all"
+                                        data-value="1">1</button>
+                                    <button
+                                        class="num-pad-btn bg-white hover:bg-emerald-100 text-gray-800 font-semibold py-3 rounded-lg shadow-sm border border-gray-200 transition-all"
+                                        data-value="2">2</button>
+                                    <button
+                                        class="num-pad-btn bg-white hover:bg-emerald-100 text-gray-800 font-semibold py-3 rounded-lg shadow-sm border border-gray-200 transition-all"
+                                        data-value="3">3</button>
+                                    <button
+                                        class="num-pad-btn bg-white hover:bg-emerald-100 text-gray-800 font-semibold py-3 rounded-lg shadow-sm border border-gray-200 transition-all"
+                                        data-value="4">4</button>
+                                    <button
+                                        class="num-pad-btn bg-white hover:bg-emerald-100 text-gray-800 font-semibold py-3 rounded-lg shadow-sm border border-gray-200 transition-all"
+                                        data-value="5">5</button>
+                                    <button
+                                        class="num-pad-btn bg-white hover:bg-emerald-100 text-gray-800 font-semibold py-3 rounded-lg shadow-sm border border-gray-200 transition-all"
+                                        data-value="6">6</button>
+                                    <button
+                                        class="num-pad-btn bg-white hover:bg-emerald-100 text-gray-800 font-semibold py-3 rounded-lg shadow-sm border border-gray-200 transition-all"
+                                        data-value="7">7</button>
+                                    <button
+                                        class="num-pad-btn bg-white hover:bg-emerald-100 text-gray-800 font-semibold py-3 rounded-lg shadow-sm border border-gray-200 transition-all"
+                                        data-value="8">8</button>
+                                    <button
+                                        class="num-pad-btn bg-white hover:bg-emerald-100 text-gray-800 font-semibold py-3 rounded-lg shadow-sm border border-gray-200 transition-all"
+                                        data-value="9">9</button>
+                                    <button
+                                        class="num-pad-btn bg-white hover:bg-emerald-100 text-gray-800 font-semibold py-3 rounded-lg shadow-sm border border-gray-200 transition-all"
+                                        data-value="00">00</button>
+                                    <button
+                                        class="num-pad-btn bg-white hover:bg-emerald-100 text-gray-800 font-semibold py-3 rounded-lg shadow-sm border border-gray-200 transition-all"
+                                        data-value="0">0</button>
+                                    <button
+                                        class="num-pad-btn bg-white hover:bg-emerald-100 text-gray-800 font-semibold py-3 rounded-lg shadow-sm border border-gray-200 transition-all"
+                                        data-value=".">.</button>
+                                </div>
+                                <div class="mt-2 max-w-xs mx-auto">
+                                    <button
+                                        class="num-pad-btn bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg shadow-sm border border-gray-300 w-full flex items-center justify-center transition-all"
+                                        data-value="clear">
+                                        <i data-lucide="delete" class="w-4 h-4 mr-2"></i>
+                                        Limpiar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Payment Details - Compacto -->
+                        <div id="card-payment-details" class="hidden">
+                            <div class="bg-gray-50 p-4 rounded-xl">
+                                <div class="grid grid-cols-2 gap-3 mb-3">
+                                    <div class="relative">
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Número de
+                                            Tarjeta</label>
+                                        <input type="text" id="card_number" name="card_number"
+                                            placeholder="XXXX XXXX XXXX XXXX"
+                                            class="w-full border rounded-lg py-2 pl-8 text-sm" maxlength="19">
+                                        <i data-lucide="credit-card"
+                                            class="absolute left-2 top-8 w-4 h-4 text-gray-400"></i>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Nombre</label>
+                                        <input type="text" id="card_name" name="card_name"
+                                            class="w-full border rounded-lg py-2 text-sm" placeholder="Nombre completo">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Expiración</label>
+                                        <input type="text" id="card_expiry" name="card_expiry" placeholder="MM/AA"
+                                            class="w-full border rounded-lg py-2 text-sm" maxlength="5">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">CVV</label>
+                                        <input type="text" id="card_cvv" name="card_cvv" placeholder="123"
+                                            class="w-full border rounded-lg py-2 text-sm" maxlength="4">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botón COBRAR - Compacto pero destacado -->
+                        <form id="procesar-pago-form" action="{% url 'ventas:procesar_pago' %}" method="post"
+                            class="mt-6">
+                            {% csrf_token %}
+                            <input type="hidden" name="venta_id" value="{{ venta.id }}">
+                            <input type="hidden" id="cliente_id_input" name="cliente_id"
+                                value="{{ venta.cliente.id|default:'' }}">
+                            <input type="hidden" id="metodo_pago_input" name="metodo_pago" value="cash">
+                            <input type="hidden" id="monto_recibido" name="monto_recibido" value="0">
+                            <input type="hidden" id="cambio" name="cambio" value="0">
+
+                            <button type="submit" id="process-payment"
+                                class="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white rounded-xl shadow-xl transform hover:scale-[1.02] transition-all disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed disabled:hover:scale-100 py-6 relative overflow-hidden group"
+                                disabled>
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000">
+                                </div>
+                                <div class="relative flex flex-col items-center justify-center">
+                                    <div class="flex items-center mb-1">
+                                        <i data-lucide="check-circle" class="w-8 h-8 mr-2"></i>
+                                        <span class="text-4xl font-black tracking-tight">COBRAR</span>
+                                    </div>
+                                    <div class="text-2xl font-bold opacity-90" id="cobrar-amount">${{ total|floatformat:2 }}</div>
+                                </div>
+                            </button>
+                        </form>
+
+                        <a href="{% url 'ventas:ventas' %}"
+                            class="mt-3 w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 flex items-center justify-center text-sm font-medium transition-all">
+                            <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                            Cancelar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Selección/Creación de Cliente -->
+        <div id="clientModal"
+            class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4"
+            onclick="closeClientModal(event)">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden"
+                onclick="event.stopPropagation()">
+                <!-- Header del Modal -->
+                <div class="bg-gradient-to-r from-emerald-500 to-lime-500 px-8 py-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-3xl font-bold text-white flex items-center gap-3">
+                            <i class="fas fa-users"></i>
+                            Seleccionar Cliente
+                        </h2>
+                        <p class="text-emerald-50 mt-1">Busca un cliente existente o crea uno nuevo</p>
+                    </div>
+                    <button onclick="closeClientModal()"
+                        class="text-white hover:bg-white/20 rounded-full p-2 transition-all">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+
+                <!-- Tabs -->
+                <div class="border-b border-gray-200 bg-gray-50">
+                    <div class="flex px-8">
+                        <button onclick="switchClientTab('search')" id="tab-search"
+                            class="client-tab px-6 py-4 font-semibold text-emerald-600 border-b-2 border-emerald-500">
+                            <i class="fas fa-search mr-2"></i>Buscar Cliente
+                        </button>
+                        <button onclick="switchClientTab('create')" id="tab-create"
+                            class="client-tab px-6 py-4 font-semibold text-gray-600 hover:text-gray-900">
+                            <i class="fas fa-user-plus mr-2"></i>Crear Nuevo
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Contenido del Modal -->
+                <div class="p-8 overflow-y-auto" style="max-height: calc(90vh - 200px);">
+
+                    <!-- Tab: Buscar Cliente -->
+                    <div id="search-client-tab" class="client-tab-content">
+                        <!-- Buscador -->
+                        <div class="mb-6">
+                            <div class="relative">
+                                <input type="text" id="modal-client-search"
+                                    placeholder="Buscar por nombre, identificación, teléfono o email..."
+                                    class="w-full h-14 pl-14 pr-4 text-lg border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all"
+                                    oninput="searchClientsInModal(this.value)">
+                                <i
+                                    class="fas fa-search absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl"></i>
+                            </div>
+                        </div>
+
+                        <!-- Lista de Clientes -->
+                        <div id="modal-clients-list" class="space-y-3">
+                            <div class="text-center py-12 text-gray-500">
+                                <i class="fas fa-spinner fa-spin text-4xl mb-3 text-emerald-500"></i>
+                                <p>Cargando clientes...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Crear Cliente -->
+                    <div id="create-client-tab" class="client-tab-content hidden">
+                        <form id="quick-client-form" onsubmit="createQuickClient(event)">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        <i class="fas fa-user mr-1 text-emerald-500"></i>Nombre *
+                                    </label>
+                                    <input type="text" name="nombre" required
+                                        class="w-full h-12 px-4 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        <i class="fas fa-id-card mr-1 text-emerald-500"></i>Cédula/RUC *
+                                    </label>
+                                    <input type="text" name="identificacion" required
+                                        class="w-full h-12 px-4 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        <i class="fas fa-phone mr-1 text-emerald-500"></i>Teléfono
+                                    </label>
+                                    <input type="text" name="telefono"
+                                        class="w-full h-12 px-4 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        <i class="fas fa-envelope mr-1 text-emerald-500"></i>Email
+                                    </label>
+                                    <input type="email" name="email"
+                                        class="w-full h-12 px-4 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all">
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        <i class="fas fa-map-marker-alt mr-1 text-emerald-500"></i>Dirección
+                                    </label>
+                                    <input type="text" name="direccion"
+                                        class="w-full h-12 px-4 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all">
+                                </div>
+                            </div>
+
+                            <div class="mt-8 flex gap-4">
+                                <button type="button" onclick="closeClientModal()"
+                                    class="flex-1 h-14 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl transition-all">
+                                    Cancelar
+                                </button>
+                                <button type="submit"
+                                    class="flex-1 h-14 bg-gradient-to-r from-emerald-500 to-lime-500 hover:from-emerald-600 hover:to-lime-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
+                                    <i class="fas fa-check"></i>
+                                    Crear y Seleccionar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Pasar variables de Django a JavaScript
+            window.DJANGO_VARS = {
+                total: parseFloat('{{ total|floatformat:2 }}') || 0,
+                ventaId: '{{ venta.id }}',
+                verificarStockUrl: '{% url "ventas:verificar_stock" %}',
+                actualizarClienteUrl: '{% url "ventas:actualizar_cliente_venta" venta.id %}',
+                aplicarClienteDescuentosUrl: '{% url "ventas:aplicar_cliente_descuentos" %}',
+                searchClientsUrl: '{% url "clients:client_search" %}',
+                createClientUrl: '{% url "clients:agregar" %}'
+            };
+        </script>
+        <script src="{% static 'js/client-modal.js' %}?v=14"></script>
+        <script src="{% static 'js/completar-venta.js' %}?v=14"></script>
+        {% endblock %}

@@ -1,0 +1,39 @@
+# Requisitos principales
+Django>=4.2,<5.0
+
+# Soporte de base de datos PostgreSQL
+psycopg2-binary>=2.9
+
+# Servidor WSGI para produccion
+gunicorn>=21.2.0
+
+# Manejo de variables de entorno
+python-decouple>=3.8
+
+# Whitenoise para servir archivos estaticos
+whitenoise>=6.6.0
+
+# Herramientas utiles para desarrollo
+django-debug-toolbar>=4.2
+
+# Pillow para manejo de imagenes
+Pillow>=10.0.0
+
+# dj-database-url para parsear DATABASE_URL
+dj-database-url>=2.1.0
+
+# Cloudinary para almacenamiento de imagenes
+cloudinary>=1.36.0
+django-cloudinary-storage>=0.3.0
+
+# Django Channels para WebSockets
+channels>=4.0.0
+channels-redis>=4.1.0
+daphne>=4.0.0
+
+# lxml para procesamiento XML (facturación electrónica)
+lxml>=4.9.0
+
+# Exportación de reportes
+openpyxl>=3.1.0  # Para Excel
+reportlab>=4.0.0  # Para PDF

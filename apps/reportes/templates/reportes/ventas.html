@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load ventas_filters %}
+{% load reportes_filters %}
+
+{% block title %}Reporte de Ventas{% endblock %}
+{% block section_title %}Reporte de Ventas{% endblock %}
+{% block back_url %}{% url 'reportes:index' %}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-7xl mx-auto">
+            
+            <!-- Header con gradiente Lemon -->
+            <div class="bg-gradient-to-r from-emerald-500 to-lime-500 rounded-2xl shadow-xl p-8 mb-8">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-3xl font-bold text-white flex items-center">
+                            <i data-lucide="trending-up" class="w-8 h-8 mr-3"></i>
+                            Reporte de Ventas
+                        </h1>
+                        <p class="text-emerald-50 mt-2">Análisis completo de tu rendimiento comercial</p>
+                    </div>
+                    <div class="hidden md:block">
+                        <div class="bg-white/20 backdrop-blur-sm rounded-xl px-6 py-3">
+                            <p class="text-emerald-50 text-sm">Período actual</p>
+                            <p class="text-white font-semibold">{{ periodo_texto }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                <!-- Filtros modernos -->
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-8 border border-gray-100 dark:border-gray-700">
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+                        <i data-lucide="sliders" class="w-5 h-5 mr-2 text-emerald-600"></i>
+                        Filtrar Período
+                    </h4>
+                    <form method="get" class="flex flex-wrap gap-4 items-end">
+                        <div class="flex-1 min-w-[200px]">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Desde</label>
+                            <input type="date" name="fecha_desde" value="{{ fecha_desde|date:'Y-m-d' }}" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring focus:ring-emerald-500 focus:ring-opacity-50 transition-all">
+                        </div>
+                        <div class="flex-1 min-w-[200px]">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Hasta</label>
+                            <input type="date" name="fecha_hasta" value="{{ fecha_hasta|date:'Y-m-d' }}" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring focus:ring-emerald-500 focus:ring-opacity-50 transition-all">
+                        </div>
+                        <div class="flex-1 min-w-[200px]">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo</label>
+                            <select name="tipo_documento" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-emerald-500 focus:ring focus:ring-emerald-500 focus:ring-opacity-50 transition-all">
+                                <option value="todos">Todos</option>
+                                <option value="factura">Facturas</option>
+                                <option value="nota_venta">Notas de Venta</option>
+                                <option value="ticket">Tickets</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-3 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl font-medium">
+                            <i data-lucide="search" class="w-4 h-4 inline-block mr-2"></i>Buscar
+                        </button>
+                        
+                        <!-- Dropdown Exportar -->
+                        <div class="relative" x-data="{ open: false }">
+                            <button type="button" @click="open = !open" class="bg-white dark:bg-gray-700 border-2 border-emerald-500 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-gray-600 py-3 px-6 rounded-xl transition-all duration-300 font-medium flex items-center">
+                                <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+                                Exportar
+                                <i data-lucide="chevron-down" class="w-4 h-4 ml-2"></i>
+                            </button>
+                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-10">
+                                <button type="submit" formaction="{% url 'reportes:ventas' %}" name="export" value="excel" class="w-full text-left px-4 py-3 hover:bg-emerald-50 dark:hover:bg-gray-700 transition-colors flex items-center rounded-t-xl">
+                                    <i data-lucide="file-spreadsheet" class="w-4 h-4 mr-3 text-emerald-600"></i>
+                                    <span class="text-gray-700 dark:text-gray-300">Excel (.xlsx)</span>
+                                </button>
+                                <button type="submit" formaction="{% url 'reportes:ventas' %}" name="export" value="pdf" class="w-full text-left px-4 py-3 hover:bg-emerald-50 dark:hover:bg-gray-700 transition-colors flex items-center rounded-b-xl">
+                                    <i data-lucide="file-text" class="w-4 h-4 mr-3 text-red-600"></i>
+                                    <span class="text-gray-700 dark:text-gray-300">PDF</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- KPIs con diseño Lemon -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- Ventas - Card Principal -->
+                    <div class="bg-gradient-to-br from-emerald-50 to-lime-50 dark:from-emerald-900/20 dark:to-lime-900/20 rounded-2xl p-6 border-2 border-emerald-200 dark:border-emerald-700 shadow-xl hover:shadow-2xl transition-all duration-300">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex-1">
+                                <p class="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">Ventas del Período</p>
+                                <h3 class="text-4xl font-bold text-gray-900 dark:text-white mt-2">${{ total_ventas|floatformat:2 }}</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                                    Ticket promedio: <span class="font-semibold text-emerald-700 dark:text-emerald-300">${{ ticket_promedio|floatformat:2 }}</span>
+                                </p>
+                            </div>
+                            <div class="bg-gradient-to-br from-emerald-500 to-lime-500 p-3 rounded-xl shadow-lg">
+                                <i data-lucide="dollar-sign" class="w-7 h-7 text-white"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-center pt-3 border-t border-emerald-200 dark:border-emerald-700">
+                            {% if porcentaje_cambio > 0 %}
+                            <span class="text-emerald-600 dark:text-emerald-400 flex items-center font-semibold text-sm">
+                                <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>+{{ porcentaje_cambio|floatformat:1 }}%
+                            </span>
+                            {% elif porcentaje_cambio < 0 %}
+                            <span class="text-red-600 dark:text-red-400 flex items-center font-semibold text-sm">
+                                <i data-lucide="trending-down" class="w-4 h-4 mr-1"></i>{{ porcentaje_cambio|floatformat:1 }}%
+                            </span>
+                            {% else %}
+                            <span class="text-gray-600 dark:text-gray-400 flex items-center text-sm">0%</span>
+                            {% endif %}
+                            <span class="text-gray-500 dark:text-gray-400 ml-2 text-sm">vs período anterior</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Facturas -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Facturas Emitidas</p>
+                                <h4 class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ total_facturas }}</h4>
+                            </div>
+                            <div class="bg-blue-100 dark:bg-blue-900/40 p-3 rounded-xl">
+                                <i data-lucide="file-text" class="w-6 h-6 text-blue-600 dark:text-blue-400"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                            {{ periodo_texto }}
+                        </div>
+                    </div>
+                    
+                    <!-- IVA -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">IVA Generado</p>
+                                <h4 class="text-3xl font-bold text-gray-900 dark:text-white mt-2">${{ total_iva|floatformat:2 }}</h4>
+                            </div>
+                            <div class="bg-amber-100 dark:bg-amber-900/40 p-3 rounded-xl">
+                                <i data-lucide="percent" class="w-6 h-6 text-amber-600 dark:text-amber-400"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                            Por declarar al SRI
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Gráfico de Ventas -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
+                    <h5 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Tendencia de Ventas</h5>
+                    <div class="h-64 w-full">
+                        <canvas id="ventas-chart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Tabla de Ventas -->
+                <div class="mb-6">
+                    <h5 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Detalle de Transacciones</h5>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Factura #</th>
+                                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fecha</th>
+                                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cliente</th>
+                                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total</th>
+                                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Método</th>
+                                    <th class="py-3 px-4 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                {% for transaccion in transacciones %}
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <td class="py-3 px-4 text-sm font-semibold text-gray-800 dark:text-gray-200">{{ transaccion.factuID }}</td>
+                                    <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">{{ transaccion.fecha|date:"d/m/Y H:i" }}</td>
+                                    <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">{{ transaccion.venta.cliente.nombre }}</td>
+                                    <td class="py-3 px-4 text-sm font-bold text-gray-900 dark:text-white">${{ transaccion.monto|floatformat:2 }}</td>
+                                    <td class="py-3 px-4">
+                                        {% if transaccion.metodo_pago == 'cash' %}
+                                        <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">Efectivo</span>
+                                        {% elif transaccion.metodo_pago == 'card' %}
+                                        <span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">Tarjeta</span>
+                                        {% elif transaccion.metodo_pago == 'transfer' %}
+                                        <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">Transferencia</span>
+                                        {% else %}
+                                        <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300">{{ transaccion.metodo_pago|title }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3 px-4 text-sm">
+                                        <div class="flex justify-center space-x-2">
+                                            <a href="{% url 'transacciones:detalle_transaccion' transaccion.transaction_id %}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300" title="Ver desglose con IVA">
+                                                <i data-lucide="eye" class="w-4 h-4"></i>
+                                            </a>
+                                            <a href="{% url 'ventas:descargar_factura' transaccion.venta.id %}" class="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300" title="Descargar factura">
+                                                <i data-lucide="download" class="w-4 h-4"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="py-6 text-center text-gray-500 dark:text-gray-400">
+                                        No se encontraron transacciones en el período seleccionado
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center">
+                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                            Mostrando {{ page_obj.start_index }}-{{ page_obj.end_index }} de {{ page_obj.paginator.count }} registros
+                        </div>
+                        <div class="flex space-x-1">
+                            {% if page_obj.has_previous %}
+                            <a href="?page={{ page_obj.previous_page_number }}&fecha_desde={{ fecha_desde|date:'Y-m-d' }}&fecha_hasta={{ fecha_hasta|date:'Y-m-d' }}&tipo_documento={{ tipo_documento }}" class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">Anterior</a>
+                            {% else %}
+                            <span class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-600 bg-gray-100 dark:bg-gray-800 cursor-not-allowed">Anterior</span>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                <span class="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700">{{ num }}</span>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <a href="?page={{ num }}&fecha_desde={{ fecha_desde|date:'Y-m-d' }}&fecha_hasta={{ fecha_hasta|date:'Y-m-d' }}&tipo_documento={{ tipo_documento }}" class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">{{ num }}</a>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}&fecha_desde={{ fecha_desde|date:'Y-m-d' }}&fecha_hasta={{ fecha_hasta|date:'Y-m-d' }}&tipo_documento={{ tipo_documento }}" class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">Siguiente</a>
+                            {% else %}
+                            <span class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-600 bg-gray-100 dark:bg-gray-800 cursor-not-allowed">Siguiente</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                
+                <!-- Información para SRI -->
+                <div class="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg border border-amber-100 dark:border-amber-800">
+                    <h5 class="text-lg font-semibold text-gray-800 dark:text-white mb-2 flex items-center">
+                        <i data-lucide="info" class="w-5 h-5 mr-2 text-amber-600 dark:text-amber-400"></i>
+                        Información para el SRI
+                    </h5>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                                <span class="font-medium">Próxima declaración IVA:</span> {{ proxima_declaracion|date:"d/m/Y" }}
+                            </p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                                <span class="font-medium">Total ventas gravadas:</span> ${{ total_ventas_gravadas|floatformat:2 }}
+                            </p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">
+                                <span class="font-medium">Total IVA generado:</span> ${{ total_iva|floatformat:2 }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                                <span class="font-medium">Retenciones recibidas:</span> ${{ retenciones_recibidas|floatformat:2 }}
+                            </p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                                <span class="font-medium">Retenciones efectuadas:</span> ${{ retenciones_efectuadas|floatformat:2 }}
+                            </p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">
+                                <span class="font-medium">Estado ATS:</span> 
+                                {% if estado_ats == 'generado' %}
+                                <span class="text-green-600 dark:text-green-400">Generado</span>
+                                {% elif estado_ats == 'pendiente' %}
+                                <span class="text-yellow-600 dark:text-yellow-400">Pendiente</span>
+                                {% else %}
+                                <span class="text-red-600 dark:text-red-400">No generado</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Update the buttons to pass the current date filters -->
+                    <div class="mt-3 flex space-x-3">
+                        <a href="{% url 'reportes:iva_declaracion' %}?fecha_desde={{ fecha_desde|date:'Y-m-d' }}&fecha_hasta={{ fecha_hasta|date:'Y-m-d' }}" class="text-sm bg-amber-600 hover:bg-amber-700 text-white py-2 px-4 rounded-md transition-colors flex items-center">
+                            <i data-lucide="file-text" class="w-4 h-4 mr-1"></i>
+                            Preparar Declaración
+                        </a>
+                        <a href="{% url 'reportes:ats' %}?fecha_desde={{ fecha_desde|date:'Y-m-d' }}&fecha_hasta={{ fecha_hasta|date:'Y-m-d' }}" class="text-sm bg-white dark:bg-gray-700 text-amber-600 dark:text-amber-400 border border-amber-600 dark:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 py-2 px-4 rounded-md transition-colors flex items-center">
+                            <i data-lucide="download" class="w-4 h-4 mr-1"></i>
+                            Descargar ATS
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            // Datos para el gráfico de ventas
+            const ventasDataStr = '{{ ventas_chart_data|safe }}';
+            
+            // Si no hay datos, crear datos de ejemplo para mostrar el gráfico
+            let ventasData;
+            try {
+                ventasData = JSON.parse(ventasDataStr);
+            } catch (e) {
+                console.warn('No se pudieron analizar los datos del gráfico, usando datos de ejemplo');
+                ventasData = {
+                    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul'],
+                    values: [65, 59, 80, 81, 56, 55, 40]
+                };
+            }
+            
+            const ctx = document.getElementById('ventas-chart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ventasData.labels,
+                    datasets: [{
+                        label: 'Ventas',
+                        data: ventasData.values,
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                        pointRadius: 4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `$${context.raw.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error initializing chart:', error);
+        }
+    });
+</script>
+
+<!-- Alpine.js para el dropdown -->
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+{% endblock %}
+{% endblock %}
